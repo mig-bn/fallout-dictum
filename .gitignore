@@ -7,3 +7,6 @@
 
 # Paquetes para compartir
 /compartir/
+
+# La guía se genera con docs/generate.mjs
+/docs/guia-fallout-dictum.html

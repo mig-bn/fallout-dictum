@@ -10,6 +10,7 @@ Módulos de Foundry VTT para el sistema Imperium Maledictum (id `impmal`). Cada 
 - `fallout-dictum-chargen\`: creación de personaje configurable. Permite elegir las tablas de Orígenes, Facciones y Razas.
 - `fallout-dictum-races\`: razas jugables (Humano, Necrófago, Supermutante y Robot) con sus tiradas y efectos.
 - `fallout-dictum-starter\`: base de Fallout-Dictum. Requiere los módulos anteriores y añade lo mínimo para jugar: Facciones, Orígenes, Roles, Talentos e Ítems.
+- `docs\`: guía en PDF para jugadores, generada desde los datos de los módulos con `node docs/generate.mjs`. Hay que regenerarla al cambiar reglas o contenido.
 
 ## Reglas de trabajo
 
