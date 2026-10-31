@@ -1,0 +1,9 @@
+# Cada módulo tiene su propio repositorio
+/fallout-dictum-*/
+/impmal-ajustes/
+
+# Copia de solo lectura del sistema
+/referencia/
+
+# Paquetes para compartir
+/compartir/
