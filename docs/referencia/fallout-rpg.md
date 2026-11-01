@@ -112,3 +112,9 @@ Fuente: [Fallout Wiki](https://fallout.wiki/wiki/Fallout_4_armor_and_clothing). 
 - **Sin casco en el conjunto:** Cuero, Metal y Saqueador.
 - **Expansiones:** Marine tiene casco solo en su variante de asalto, Trapper no tiene casco y Robot tiene cascos solo en su versión básica.
 - **X-02:** como nombre oficial aparece en contenido de Creation Club de Fallout 4. En Fallout 3 esa armadura es la Advanced Power Armor Mk II ([hilo de lore](https://teddit.bsalzberg.com/r/falloutlore/comments/9ug54f/fo76_spoiler_there_is_a_terminal_entry_that), no oficial).
+
+## Modificaciones
+
+- **Fallout RPG:** cada modificación ocupa una ranura (`modType` en el [sistema de Foundry](https://www.foundryvtt-hub.com/package/fallout/)): armazón, cañón, boca, cargador, mira, culata, empuñadura, condensador y, en cuerpo a cuerpo, filo. Cambian daño, cadencia, alcance, peso y cualidades, y añaden un prefijo al nombre del arma. Muchas piden un rango de Perk: Gun Nut, Blacksmith o Science!. Las armaduras tienen forros y materiales, como Lead Lined, Pocketed, Muffled o Padded.
+- **New Vegas:** una modificación de cada tipo por arma, hasta 3, y [una vez puesta no se quita](https://fallout.wiki/wiki/Fallout:_New_Vegas_weapon_mods). Tipos: cargadores, miras, silenciadores, precisión, daño, cadencia, cañones, durabilidad y peso.
+- **Fallout 4:** [ranuras por arma](https://fallout.wiki/wiki/Fallout_4_weapon_mods) (armazón, cañón, empuñadura o culata, cargador, mira y boca). Sus [modificaciones de armadura](https://primagames.com/eguides/fallout-4-eguide/inv/mods-charts/armor-mods) incluyen Lead Lined y Pocketed.

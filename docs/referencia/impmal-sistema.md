@@ -84,7 +84,7 @@ Patrones de las 30 protecciones de `impmal-core`. `locations.list` admite `head`
 - **Trajes:** `mundane` cubre todo menos la cabeza; desde `flak` pueden cubrir también la cabeza.
 - **Rasgos:** el rasgo `loud` da Desventaja en sigilo al llevar la armadura (línea 10349). Las pesadas llevan `heavy(3)` o `heavy(4)`, y las discretas, `subtle`.
 - **Escudos:** categoría `shield`, sin zonas y con el rasgo `shield(n)`.
-- **Servoarmadura:** en `impmal-core`, su efecto, mientras está equipada, deja su carga en 0 y suma 10 a Strength. Las nuestras son un ServoEsqueleto con piezas y reemplazan Strength por 55.
+- **Servoarmadura:** en `impmal-core`, su efecto, mientras está equipada, deja su carga en 0 y suma 10 a Strength. Las nuestras son un Armazón de servoarmadura con piezas y reemplazan Strength por 55.
 - **Efecto condicional:** `shouldTransferEffect` del modelo decide si un efecto de un Ítem llega al actor. Lo usamos para el estado de sellado.
 - **Desventaja automática:** un script `dialog` con `args.disadvantage++` y `activateScript`. Cada Desventaja extra se convierte en -10 a la tirada (línea 175).
 - **Fijar una característica:** el disparador `computeCharacteristics` corre tras calcular `total` y `bonus`, y antes de skills, carga y Wounds, así que todo usa el valor nuevo. Comprobado en Foundry, incluido el daño cuerpo a cuerpo.
@@ -109,3 +109,10 @@ Patrones de los 93 Talentos de `impmal-core`.
 
 - Cómo se calculan las Wounds de un PNJ y si `fallout-dictum-stats` afecta a los PNJ igual que a los personajes, incluido Luck.
 - Para qué se usa la clave `talents` y si hace falta una tabla propia.
+
+## Modificaciones
+
+- El tipo `modification` es nativo (`impmal.js`, línea 7518) y se aplica a `weapon`, `protection` y `augmetic`. El equipo no tiene ranura de modificaciones.
+- Se arrastra a la hoja del Ítem, que guarda una copia en `system.mods`; el original no se gasta (línea 18623). `system.disabled` la desactiva.
+- Aporta `addedTraits` y `removedTraits` y efectos con `changes` sobre el Ítem. Se aplican antes de `computeRange`, así que `system.rangeModifier.value` cambia el alcance (líneas 7408 y 9206).
+- `impmal-core` trae 10 (como Silencer, Omniscope, Laser Sight y Melee Attachment) e `impmal-requisition`, 11 (como Foregrip y Additional Armour Plating). La bayoneta del libro funciona como una espada aparte, en texto.

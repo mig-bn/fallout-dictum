@@ -33,6 +33,9 @@ const wWeapons = wasteland("weapons");
 const wAmmo = wasteland("ammo");
 const wArmour = wasteland("armour");
 const wConsumables = wasteland("consumables");
+const wEquipment = wasteland("equipment");
+const wMods = wasteland("modifications");
+const wAugmetics = wasteland("augmetics");
 const wPerks = wasteland("perks");
 const wCriticals = wasteland("criticals");
 const wTables = wasteland("tables");
@@ -91,7 +94,7 @@ const originSection = table(["Origen", "Fija (+5)", "A elegir (+5)", "Ítem", "D
   `<strong>${esc(origin.name)}</strong>`,
   SHORT[origin.system.characteristics.base],
   origin.system.characteristics.choices.map(key => SHORT[key]).join(", "),
-  esc([...equipment, ...weapons].find(item => origin.system.equipment.list[0].uuid === `Item.${item._id}`)?.name),
+  origin.system.equipment.list.map(({ uuid }) => esc([...equipment, ...weapons, ...protection].find(item => uuid === `Item.${item._id}`)?.name)).join(", "),
   `<span class="small">${stripP(origin.system.notes.player)}</span>`
 ]));
 
@@ -105,7 +108,7 @@ const factionSection = factions.map(faction => {
 <dt>Avances</dt><dd>${c.advances.value} entre ${c.advances.skills.map(skillName).join(", ")}</dd>
 <dt>Caps iniciales</dt><dd>${c.solars}</dd>
 <dt>Influencia</dt><dd>1 en ${esc(faction.name)}</dd>
-<dt>Talento</dt><dd>${esc(c.talents.options[0].name)}</dd>
+<dt>Perk</dt><dd>${esc(c.talents.options[0].name)}</dd>
 <dt>Equipo</dt><dd>${choiceText(c.equipment)}</dd>
 </dl>
 ${table(["Deber", "Características", "Avances", "Caps"], c.duty.list.map(({ id }) => dutyLine(dutyById.get(id))), "compact")}
@@ -121,7 +124,7 @@ const roleSection = roles.map(role => {
 <dl>
 <dt>Avances</dt><dd>${s.skills.value} entre ${s.skills.list.map(skillName).join(", ")}</dd>
 <dt>Especializaciones</dt><dd>${s.specialisations.value}, de ${s.specialisations.keys.map(skillName).join(", ")}</dd>
-<dt>Talentos</dt><dd>Elige ${s.talents.number}: ${list(talents)}</dd>
+<dt>Perks</dt><dd>Elige ${s.talents.number}: ${list(talents)}</dd>
 <dt>Equipo</dt><dd>${choiceText(s.equipment)}</dd>
 </dl>
 </section>`;
@@ -181,7 +184,7 @@ const body = `
       <li><a href="#origenes">Orígenes</a></li>
       <li><a href="#facciones">Facciones y Deberes</a></li>
       <li><a href="#roles">Roles</a></li>
-      <li><a href="#talentos">Talentos</a></li>
+      <li><a href="#perks-base">Perks</a></li>
       <li><a href="#especializaciones">Especializaciones</a></li>
       <li><a href="#armas">Armas y munición</a></li>
       <li><a href="#armaduras">Armaduras</a></li>
@@ -189,6 +192,7 @@ const body = `
       <li><a href="#wasteland">Wasteland: armas y armaduras</a></li>
       <li><a href="#servo">Wasteland: servoarmaduras</a></li>
       <li><a href="#consumibles">Wasteland: consumibles</a></li>
+      <li><a href="#utilitarios">Wasteland: equipo y aumentos</a></li>
       <li><a href="#perks">Wasteland: Perks</a></li>
       <li><a href="#pifias">Wasteland: pifias y críticos</a></li>
       <li><a href="#foundry">Guía rápida en Foundry</a></li>
@@ -203,7 +207,7 @@ ${table(["Módulo", "Qué aporta"], [
   ["<strong>Characteristics &amp; Skills</strong>", "Características, skills, Radiation y Caps"],
   ["<strong>Character Creation</strong>", "Etapa de Raza y tablas configurables"],
   ["<strong>Races</strong>", "Humano, Necrófago, Supermutante y Robot"],
-  ["<strong>Starter</strong>", "Orígenes, Facciones, Roles, Talentos y equipo"],
+  ["<strong>Starter</strong>", "Orígenes, Facciones, Roles, Perks y equipo"],
   ["<strong>Wasteland</strong>", "Más armas y armaduras, servoarmaduras por piezas, consumibles, Perks, pifias y críticos"]
 ])}
 <p>En Foundry, muchos nombres siguen en inglés. Esta guía usa los mismos para que los encuentres en la hoja.</p>
@@ -246,8 +250,8 @@ ${table(["Skill", "Característica", "Skill", "Característica"], (() => {
     </ul>
     Si repartes, tienes <strong>70 puntos</strong>, con un mínimo de 4 y un máximo de 18 en cada una, y sumas el bono de la fórmula. Las Razas pueden bajar ese máximo y bloquear intercambios.</li>
   <li><strong>Origen.</strong> Dónde naciste. Tirar da <strong>25 XP</strong>; elegirlo, 0. Recibes +5 a una característica fija y +5 a una que elijas.</li>
-  <li><strong>Facción.</strong> Tirar da <strong>75 XP</strong>; elegirla, 0. Recibes características, 5 avances, Caps, Influencia, Talento y equipo.</li>
-  <li><strong>Rol.</strong> Arrastra su Ítem desde la barra de Ítems. Recibes 3 avances, 2 Especializaciones, Talentos y equipo.</li>
+  <li><strong>Facción.</strong> Tirar da <strong>75 XP</strong>; elegirla, 0. Recibes características, 5 avances, Caps, Influencia, Perk y equipo.</li>
+  <li><strong>Rol.</strong> Arrastra su Ítem desde la barra de Ítems. Recibes 3 avances, 2 Especializaciones, Perks y equipo.</li>
   <li><strong>Detalles.</strong> Nombre, aspecto y objetivos.</li>
 </ol>
 <div class="callout"><strong>Límites al crear.</strong> Una skill no puede pasar de 2 avances entre todas las etapas, y no puedes repetir una Especialización.</div>
@@ -267,13 +271,13 @@ ${factionSection}
 <p>El Rol es lo que sabes hacer en el grupo.</p>
 ${roleSection}
 
-<h2 id="talentos">8. Talentos</h2>
+<h2 id="perks-base">8. Perks</h2>
 <p>Todos dan <strong>Ventaja</strong> en una skill, en la situación indicada. Al tirar esa skill, aparece como modificador en la ventana de la tirada. Actívalo tú solo si la situación se cumple.</p>
 <h3>De Facción</h3>
-${table(["Talento", "Facción", "Efecto"], factionTalents.map(talent => [`<strong>${esc(talent.name)}</strong>`, esc(factionOfTalent(talent)), stripP(talent.system.notes.player)]))}
+${table(["Perk", "Facción", "Efecto"], factionTalents.map(talent => [`<strong>${esc(talent.name)}</strong>`, esc(factionOfTalent(talent)), stripP(talent.system.notes.player)]))}
 <h3>De skill</h3>
-<p>Cada Rol ofrece los Talentos de sus 6 skills.</p>
-${table(["Talento", "Efecto"], talentRows(skillTalents))}
+<p>Cada Rol ofrece los Perks de sus 6 skills.</p>
+${table(["Perk", "Efecto"], talentRows(skillTalents))}
 
 <h2 id="especializaciones">9. Especializaciones</h2>
 <p>Van en inglés porque el sistema busca algunas por su nombre exacto. Esta lista reúne las de Starter y Characteristics &amp; Skills. Si tu mesa usa otros módulos, puede haber más opciones.</p>
@@ -314,16 +318,16 @@ ${table(["Munición", "Cantidad", "Caps", "Para"], wAmmo.filter(item => item.typ
 ${byFolder(armourRows, items => table(["Armadura", "Protección", "Zona", "Carga", "Cualidades", "Caps"], items.map(item => [`<strong>${esc(item.name)}</strong>`, item.system.armour || "—", zones(item), item.system.encumbrance.value, item.system.traits.list.map(traitName).join(", ") || "—", item.system.cost]), "compact-text"))}
 
 <h2 id="servo">14. Wasteland: servoarmaduras</h2>
-<p>Una servoarmadura se monta sobre un <strong>ServoEsqueleto</strong> (${frame.system.cost} Caps) con 6 piezas: casco, pecho y cada brazo y pierna. Cada pieza se compra aparte, y se pueden mezclar modelos.</p>
+<p>Una servoarmadura se monta sobre un <strong>Armazón de servoarmadura</strong> (${frame.system.cost} Caps) con 6 piezas: casco, pecho y cada brazo y pierna. Cada pieza se compra aparte, y se pueden mezclar modelos.</p>
 <ol class="steps">
-  <li>Ten en tu inventario el ServoEsqueleto, las piezas y un Núcleo de fusión.</li>
-  <li>Abre la hoja del ServoEsqueleto desde su Ítem o desde su fila en el personaje.</li>
+  <li>Ten en tu inventario el Armazón de servoarmadura, las piezas y un Núcleo de fusión.</li>
+  <li>Abre la hoja del Armazón de servoarmadura desde su Ítem o desde su fila en el personaje.</li>
   <li>Arrastra allí las piezas: cada una va a su zona. Instala el núcleo.</li>
-  <li>Equipa el ServoEsqueleto: heredas las piezas que tenga puestas.</li>
+  <li>Equipa el Armazón de servoarmadura: heredas las piezas que tenga puestas.</li>
 </ol>
 ${table(["Con cargas", "Efecto"], [
   ["<strong>Strength</strong>", "Se reemplaza por 55, tengas más o menos."],
-  ["<strong>Carga</strong>", "El ServoEsqueleto y sus piezas no cuentan."],
+  ["<strong>Carga</strong>", "El Armazón de servoarmadura y sus piezas no cuentan."],
   ["<strong>Radiación</strong>", "Con las 6 piezas intactas, eres inmune a la Radiation de los impactos."]
 ])}
 ${table(["Siempre", "Efecto"], [
@@ -342,23 +346,34 @@ ${table(["Modelo", "Armour", "Vida (pecho / resto)", "Caps (pecho / resto)", "Ca
 <p>Se usan desde la hoja. Los efectos que duran una escena quedan en el personaje: retíralos cuando termine.</p>
 ${byFolder(wConsumables, items => table(["Consumible", "Efecto", "Caps"], items.map(item => [`<strong>${esc(item.name)}</strong>`, stripP(item.system.notes.player), item.system.cost])))}
 
-<h2 id="perks">16. Wasteland: Perks</h2>
-<p>Son Talentos de 100 XP. Si no cumples el requisito, el sistema pregunta si quieres ignorarlo.</p>
+<h2 id="utilitarios">16. Wasteland: equipo y aumentos</h2>
+<h3>Equipo</h3>
+<p>La mayoría no tiene reglas automáticas: te permite hacer algo o da Ventaja si el máster lo acepta.</p>
+${byFolder(wEquipment, items => table(["Objeto", "Para qué sirve", "Carga", "Caps"], items.map(item => [`<strong>${esc(item.name)}</strong>`, stripP(item.system.notes.player), item.system.encumbrance.value, item.system.cost])))}
+<h3>Modificaciones</h3>
+<p>Arrastra la modificación a la hoja de tu arma, armadura, escudo o pieza de servoarmadura: sale del inventario y vuelve al quitarla. Hay una por ranura, y cada Ítem solo admite las que le encajan. Desde la hoja también puedes desactivarlas.</p>
+${byFolder(wMods, items => table(["Modificación", "Efecto", "Se usa con", "Caps"], items.map(item => [`<strong>${esc(item.name)}</strong>`, stripP(item.system.notes.player), esc(item.system.usedWith), item.system.cost])))}
+<h3>Aumentos</h3>
+<p>Equípalos en la hoja para que cuenten. Cada uno ocupa 1, y tu máximo depende de tu bono de Endurance.</p>
+${byFolder(wAugmetics, items => table(["Aumento", "Efecto", "Caps"], items.map(item => [`<strong>${esc(item.name)}</strong>`, stripP(item.system.notes.player), item.system.cost])))}
+
+<h2 id="perks">17. Wasteland: Perks</h2>
+<p>Cuestan 100 XP. Si no cumples el requisito, el sistema pregunta si quieres ignorarlo.</p>
 ${byFolder(wPerks, items => table(["Perk", "Efecto", "Requisito"], items.map(item => [`<strong>${esc(item.name)}</strong>`, stripP(item.system.notes.player), esc(item.system.requirement.value) || "Ninguno"])))}
 
-<h2 id="pifias">17. Wasteland: pifias y críticos</h2>
+<h2 id="pifias">18. Wasteland: pifias y críticos</h2>
 <h3>Pifias (1d10)</h3>
 ${table(["Tirada", "Pifia", "Efecto"], wTables.find(t => t.key === "fumble").results.map(r => [r.range[0], `<strong>${esc(r.name)}</strong>`, stripP(r.description)]))}
 <h3>Críticos (1d10 + daño sobrante)</h3>
 <p>La herida aparece en el chat: arrástrala a tu personaje. Sus condiciones se aplican solas, y al curarla debes quitarlas aparte. Se trata con Medicae, según indica su Ítem.</p>
 ${critSections}
 
-<h2 id="foundry">18. Guía rápida en Foundry</h2>
+<h2 id="foundry">19. Guía rápida en Foundry</h2>
 <ol class="steps">
   <li><strong>Crea tu personaje</strong> con el botón Character Creation. Debe haber un máster conectado para que se pueda crear.</li>
   <li><strong>Equipa</strong> armas y armaduras desde la hoja.</li>
   <li><strong>Selecciona la munición</strong> de cada arma de fuego.</li>
-  <li><strong>Al tirar</strong>, revisa los modificadores de la ventana y activa tus Talentos si aplican.</li>
+  <li><strong>Al tirar</strong>, revisa los modificadores de la ventana y activa tus Perks si aplican.</li>
   <li><strong>Al atacar</strong>, apunta al objetivo con <strong>T</strong> sobre su token y ataca desde la hoja.</li>
   <li><strong>Usa un consumible</strong>, como el Stimpak, desde tu hoja.</li>
   <li><strong>Compra Perks</strong> arrastrándolos desde el compendio de Wasteland a tu personaje.</li>

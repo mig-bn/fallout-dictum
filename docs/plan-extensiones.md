@@ -22,11 +22,12 @@ Se trabaja por fases. En cada una se aprueba primero la lista de lo que se va a 
 |---|---|---|
 | 1. Base (hecha) | Módulo, compendios, generación desde `data\` y bloqueo de las tablas de mutación | Fallar al sucumbir no da error |
 | 2. Armas (hecha) | 48 armas y 3 municiones | A distancia por tipo; cuerpo a cuerpo en normales y especiales; ligeras, medianas y pesadas. Las pesadas siempre son a dos manos. |
-| 3. Armaduras (hecha) | 33 armaduras, ServoEsqueleto, 48 piezas de 8 modelos y Núcleo de fusión | Piezas por zona, trajes completos y escudos; servoarmaduras separadas por modelo |
+| 3. Armaduras (hecha) | 33 armaduras, Armazón de servoarmadura, 48 piezas de 8 modelos y Núcleo de fusión | Piezas por zona, trajes completos y escudos; servoarmaduras separadas por modelo |
 | 4. Consumibles (hecha) | 16 consumibles | Curación, Radiación, Drogas y Comida y bebida |
 | 5. Perks (hecha) | 30 Perks, construidos como los Talentos de `impmal-core` | A distancia, Cuerpo a cuerpo y explosivos, Defensa, Yermo, y Habilidad y social |
 | 6. Tablas (hecha) | Pifias y críticos por zona, con 60 Ítems de herida | 10 pifias y 15 resultados por zona |
 | 7. Cierre (hecha) | Prueba en Foundry, CLAUDE.md y guía en PDF | `node docs/generate.mjs` incluye el contenido nuevo |
+| 8. Modificaciones (hecha) | A distancia (27), cuerpo a cuerpo (11) y armaduras y escudos (11) y servoarmaduras (27). Sin aumentos | Por ranura: Armazón, Cañón, Cargador, Mira, Boca, Culata y empuñadura, Energía, Hoja o cabeza, Accesorio, Material, Forro, Escudo, Mejora, Blindaje y Sistema |
 
 ## Extensión 2: `fallout-dictum-bestiary` (aplazada)
 
