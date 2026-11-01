@@ -10,7 +10,9 @@ Módulos de Foundry VTT para el sistema Imperium Maledictum (id `impmal`). Cada 
 - `fallout-dictum-chargen\`: creación de personaje configurable. Permite elegir las tablas de Orígenes, Facciones y Razas.
 - `fallout-dictum-races\`: razas jugables (Humano, Necrófago, Supermutante y Robot) con sus tiradas y efectos.
 - `fallout-dictum-starter\`: base de Fallout-Dictum. Requiere los módulos anteriores y añade lo mínimo para jugar: Facciones, Orígenes, Roles, Talentos e Ítems.
+- `fallout-dictum-wasteland\`: amplía Fallout-Dictum con compendios de contenido. Se construye por categorías: armas, armaduras, consumibles, Perks y tablas.
 - `docs\`: guía en PDF para jugadores, generada desde los datos de los módulos con `node docs/generate.mjs`. Hay que regenerarla al cambiar reglas o contenido.
+- `docs\referencia\`: base de referencia sobre el juego de Fallout y el sistema. Consúltala antes de investigar una regla y añade ahí lo nuevo, con su fuente. El plan de las siguientes extensiones está en `docs\plan-extensiones.md`.
 
 ## Reglas de trabajo
 
@@ -62,3 +64,21 @@ Módulos de Foundry VTT para el sistema Imperium Maledictum (id `impmal`). Cada 
 - El sistema no recarga un arma sin un Ítem de munición seleccionado en ella. Cada Facción entrega la munición de su arma, y el jugador la selecciona en la hoja.
 - Cada Facción tiene 3 Deberes. La creación de personaje no los usa: solo se eligen al arrastrar una Facción a un actor ya creado.
 - Se construye por fases: base, prueba de personaje completo, Facciones, Orígenes, Roles, Talentos e Ítems, y cierre.
+
+### fallout-dictum-wasteland
+
+- Requiere `fallout-dictum-starter`. No repite sus Ítems ni requiere `impmal-core`. La excepción son los petos de cuero, chatarra y combate y el Casco de combate reforzado, para que cada conjunto esté completo en su carpeta.
+- El sistema suma el Armour de todo lo equipado en una zona. Fuera de las servoarmaduras, solo la Ropa de Yermo se combina con piezas; es una regla de mesa, no se bloquea por código.
+- Antes de crear una categoría, se presenta su lista y se espera la aprobación.
+- Las estadísticas siguen los patrones de `docs\referencia\impmal-sistema.md`, pero nombres, valores y textos son propios.
+- Una servoarmadura es un ServoEsqueleto con 6 piezas (`scripts\power-armour.js`), que se montan en sus ranuras (`system.slots`) desde su hoja. Una pieza montada queda equipada solo mientras lo esté el ServoEsqueleto. Se identifican por los flags `powerFrame` y `powerPiece` (su zona), y cada pieza guarda `health` y `healthMax`.
+- Con cargas (flag `charges`), el ServoEsqueleto equipado reemplaza Strength por 55, tenga el personaje más o menos, y él y sus piezas no cuentan para la carga. Gasta 1 carga al terminar cada turno de combate. Un Núcleo de fusión da 30, y sin cargas se pierde lo anterior, pero no el Armour.
+- El Armour de la pieza reduce el daño, lo que queda baja su vida y, si se rompe, el resto pasa a las Wounds. Rota no da Armour; al subirle la vida en la hoja lo recupera.
+- El ServoEsqueleto da Desventaja en toda tirada de Agility y lleva `loud`. Solo admite armadura `subtle`, y esto sí se bloquea por código, igual que equipar una pieza suelta o colocarla en otra zona.
+- Con cargas y las 6 piezas intactas está sellado: es inmune a la Radiation de los impactos y muestra el estado "Resistente a la radiación". Las caídas y el entorno sellado son reglas de sus notas, que resuelve el máster.
+- Los consumibles usan el flag `kind` de `fallout-dictum-races` (en `data\` es el campo `rules`), para que siga curando y respetando las inmunidades de cada raza. `scripts\consumables.js` añade los flags `removeRadiation`, `addRadiation`, `noCombat` y `scene`. Este último crea un efecto en el personaje, que se retira a mano al terminar la escena; repetir la dosis lo reemplaza.
+- Los Perks son Talentos de 100 XP construidos como los de `impmal-core`: requisitos por Avances con `requirement.script`, y efectos situacionales mejor que bonos fijos. El sistema pregunta si se ignora un requisito no cumplido. El flag `perk` identifica los que se comprueban desde código.
+- Las tablas de pifias y críticos se crean en cada mundo desde `data\tables.json`, una vez por `key` (`scripts\tables.js`), porque el ajuste del sistema solo acepta tablas del mundo. Se asignan si la fila está vacía, apunta a una tabla inexistente o conserva el valor original. Los críticos son Ítems del compendio `criticals`, y sus condiciones se aplican con scripts `immediate`.
+- El contenido se edita en `data\` y se genera con `npm run build`, con Foundry cerrado. Cada archivo es un compendio de `packs\`, y `path` indica su carpeta. El `_id` no se cambia.
+- Las mutaciones están desactivadas: fallar al sucumbir quita Radiation, pero no tira ninguna tabla (`scripts\mutations.js`).
+- El flag `radiation` de un arma o proyectil suma esa Radiation a cada impacto contra un personaje, ignorando la armadura. Las inmunidades de las razas siguen actuando. El flag `radiationResistance` de una armadura equipada la reduce.

@@ -28,6 +28,15 @@ const equipment = starter("equipment");
 const { races } = readJson(join(ROOT, "fallout-dictum-races", "data", "items.json"));
 const statSpecialisations = readJson(join(ROOT, "fallout-dictum-stats", "data", "specialisations.json"));
 
+const wasteland = file => readJson(join(ROOT, "fallout-dictum-wasteland", "data", `${file}.json`));
+const wWeapons = wasteland("weapons");
+const wAmmo = wasteland("ammo");
+const wArmour = wasteland("armour");
+const wConsumables = wasteland("consumables");
+const wPerks = wasteland("perks");
+const wCriticals = wasteland("criticals");
+const wTables = wasteland("tables");
+
 const CHARACTERISTICS = {
   str: "Strength (Fuerza)",
   per: "Perception (Percepción)",
@@ -133,6 +142,30 @@ const weaponRow = weapon => {
 };
 const weaponHeaders = ["Arma", "Especialización", "Daño", "Alcance", "Cargador", "Cualidades", "Caps"];
 
+const traitName = ({ key, value }) => (TRAITS[key] ?? key[0].toUpperCase() + key.slice(1)) + (value ? ` (${value})` : "");
+const wasteWeaponRow = weapon => {
+  const s = weapon.system;
+  const damage = s.damage.characteristic === "str" ? `Strength + ${s.damage.base}` : s.damage.base;
+  return [`<strong>${esc(weapon.name)}</strong>`, WEAPON_SPECS[s.spec] ?? "—", damage, RANGES[s.range ?? ""] ?? "—", s.mag?.value || "—", s.traits.list.map(traitName).join(", ") || "—", s.cost];
+};
+// Una tabla por cada carpeta del compendio.
+const byFolder = (items, render) => [...new Set(items.map(item => item.path.join(" / ")))]
+  .map(path => `<h4>${esc(path)}</h4>\n${render(items.filter(item => item.path.join(" / ") === path))}`).join("\n");
+const ZONE_NAMES = { head: "Cabeza", body: "Pecho", leftArm: "Brazo izq.", rightArm: "Brazo der.", leftLeg: "Pierna izq.", rightLeg: "Pierna der." };
+const zones = item => item.system.locations.list.length === 6 ? "Todas" : item.system.locations.list.map(zone => ZONE_NAMES[zone]).join(", ") || "—";
+const frame = wArmour.find(item => item.flags?.powerFrame);
+const pieces = wArmour.filter(item => item.flags?.powerPiece);
+const armourRows = wArmour.filter(item => item.system.category !== "power");
+const powerModels = [...new Set(pieces.map(item => item.path.at(-1)))].map(model => {
+  const set = pieces.filter(item => item.path.at(-1) === model);
+  const zone = key => set.find(item => item.flags.powerPiece === key);
+  const total = set.reduce((sum, item) => sum + item.system.cost, 0);
+  return [`<strong>${esc(model)}</strong>`, `${zone("body").system.armour} / ${zone("head").system.armour} / ${zone("leftArm").system.armour}`, `${zone("body").flags.healthMax} / ${zone("head").flags.healthMax}`, `${zone("body").system.cost} / ${zone("head").system.cost}`, total];
+});
+const critText = item => stripP(item.system.notes.player.split("</p>")[0]);
+const critSections = wTables.filter(t => t.key !== "fumble").map(t => `<h4>${esc(t.name.replace("Críticos de Fallout-Dictum: ", ""))}</h4>
+${table(["Tirada", "Herida", "Efecto"], t.results.map(r => [r.range[0] === r.range[1] ? r.range[0] : r.range.join("-"), `<strong>${esc(r.name)}</strong>`, critText(wCriticals.find(c => r.documentUuid.endsWith(c._id)))]), "compact-text")}`).join("\n");
+
 const body = `
 <header class="cover">
   <p class="kicker">Guía para jugadores · ${VERSION}</p>
@@ -153,6 +186,11 @@ const body = `
       <li><a href="#armas">Armas y munición</a></li>
       <li><a href="#armaduras">Armaduras</a></li>
       <li><a href="#equipo">Equipo</a></li>
+      <li><a href="#wasteland">Wasteland: armas y armaduras</a></li>
+      <li><a href="#servo">Wasteland: servoarmaduras</a></li>
+      <li><a href="#consumibles">Wasteland: consumibles</a></li>
+      <li><a href="#perks">Wasteland: Perks</a></li>
+      <li><a href="#pifias">Wasteland: pifias y críticos</a></li>
       <li><a href="#foundry">Guía rápida en Foundry</a></li>
     </ol>
   </nav>
@@ -165,7 +203,8 @@ ${table(["Módulo", "Qué aporta"], [
   ["<strong>Characteristics &amp; Skills</strong>", "Características, skills, Radiation y Caps"],
   ["<strong>Character Creation</strong>", "Etapa de Raza y tablas configurables"],
   ["<strong>Races</strong>", "Humano, Necrófago, Supermutante y Robot"],
-  ["<strong>Starter</strong>", "Orígenes, Facciones, Roles, Talentos y equipo"]
+  ["<strong>Starter</strong>", "Orígenes, Facciones, Roles, Talentos y equipo"],
+  ["<strong>Wasteland</strong>", "Más armas y armaduras, servoarmaduras por piezas, consumibles, Perks, pifias y críticos"]
 ])}
 <p>En Foundry, muchos nombres siguen en inglés. Esta guía usa los mismos para que los encuentres en la hoja.</p>
 
@@ -264,7 +303,57 @@ ${table(["Armadura", "Protección", "Zona", "Carga", "Caps"], protection.map(ite
 ${table(["Objeto", "Descripción", "Carga", "Caps"], equipment.map(item => [`<strong>${esc(item.name)}</strong>`, stripP(item.system.notes.player).replace(/ Para crear otro.*$/, ""), item.system.encumbrance?.value ?? 0, item.system.cost]))}
 <div class="callout"><strong>Stimpak y drogas.</strong> Un Stimpak cura 1d10 Heridas. Los Necrófagos solo reciben la mitad de esa curación, y los Robots no reciben efecto de estimulantes ni drogas.</div>
 
-<h2 id="foundry">13. Guía rápida en Foundry</h2>
+<h2 id="wasteland">13. Wasteland: armas y armaduras</h2>
+<p>El contenido de Wasteland está en sus compendios de Foundry. No repite lo anterior, salvo algunas piezas para completar conjuntos.</p>
+<h3>Armas</h3>
+${byFolder(wWeapons, items => table(weaponHeaders, items.map(wasteWeaponRow), "compact-text"))}
+<h3>Munición</h3>
+${table(["Munición", "Cantidad", "Caps", "Para"], wAmmo.filter(item => item.type === "ammo").map(item => [`<strong>${esc(item.name)}</strong>`, item.system.quantity, item.system.cost, esc(item.system.usedWith)]))}
+<h3>Armaduras</h3>
+<p>El sistema suma la Protección de todo lo que lleves equipado en una zona. Como regla de mesa, solo la Ropa de Yermo se combina con piezas.</p>
+${byFolder(armourRows, items => table(["Armadura", "Protección", "Zona", "Carga", "Cualidades", "Caps"], items.map(item => [`<strong>${esc(item.name)}</strong>`, item.system.armour || "—", zones(item), item.system.encumbrance.value, item.system.traits.list.map(traitName).join(", ") || "—", item.system.cost]), "compact-text"))}
+
+<h2 id="servo">14. Wasteland: servoarmaduras</h2>
+<p>Una servoarmadura se monta sobre un <strong>ServoEsqueleto</strong> (${frame.system.cost} Caps) con 6 piezas: casco, pecho y cada brazo y pierna. Cada pieza se compra aparte, y se pueden mezclar modelos.</p>
+<ol class="steps">
+  <li>Ten en tu inventario el ServoEsqueleto, las piezas y un Núcleo de fusión.</li>
+  <li>Abre la hoja del ServoEsqueleto desde su Ítem o desde su fila en el personaje.</li>
+  <li>Arrastra allí las piezas: cada una va a su zona. Instala el núcleo.</li>
+  <li>Equipa el ServoEsqueleto: heredas las piezas que tenga puestas.</li>
+</ol>
+${table(["Con cargas", "Efecto"], [
+  ["<strong>Strength</strong>", "Se reemplaza por 55, tengas más o menos."],
+  ["<strong>Carga</strong>", "El ServoEsqueleto y sus piezas no cuentan."],
+  ["<strong>Radiación</strong>", "Con las 6 piezas intactas, eres inmune a la Radiation de los impactos."]
+])}
+${table(["Siempre", "Efecto"], [
+  ["<strong>Daño</strong>", "El Armour de la pieza reduce el golpe y lo que queda baja su vida. Si se rompe, el daño restante pasa a tus Wounds. Rota no da Armour hasta repararla."],
+  ["<strong>Tosca y ruidosa</strong>", "Desventaja en toda tirada de Agility, y además por Loud en Stealth."],
+  ["<strong>Otras armaduras</strong>", "Solo puedes llevar armadura Subtle."],
+  ["<strong>Energía</strong>", "Un Núcleo de fusión da 30 cargas, y gastas 1 al terminar cada uno de tus turnos de combate. Sin cargas pierdes Strength 55, carga 0 e inmunidad."],
+  ["<strong>Reparar</strong>", "La vida se sube a mano en la hoja al repararla. Los Stimpaks no curan piezas."],
+  ["<strong>Caídas</strong>", "Sin daño a cualquier altura. Desde más de un piso, quienes estén a tu alcance reciben 5 Damage."]
+])}
+<h3>Modelos</h3>
+<p>Los valores de Armour son de pecho, casco y extremidades. La vida y el precio de cada extremidad son iguales a los del casco.</p>
+${table(["Modelo", "Armour", "Vida (pecho / resto)", "Caps (pecho / resto)", "Caps del conjunto"], powerModels)}
+
+<h2 id="consumibles">15. Wasteland: consumibles</h2>
+<p>Se usan desde la hoja. Los efectos que duran una escena quedan en el personaje: retíralos cuando termine.</p>
+${byFolder(wConsumables, items => table(["Consumible", "Efecto", "Caps"], items.map(item => [`<strong>${esc(item.name)}</strong>`, stripP(item.system.notes.player), item.system.cost])))}
+
+<h2 id="perks">16. Wasteland: Perks</h2>
+<p>Son Talentos de 100 XP. Si no cumples el requisito, el sistema pregunta si quieres ignorarlo.</p>
+${byFolder(wPerks, items => table(["Perk", "Efecto", "Requisito"], items.map(item => [`<strong>${esc(item.name)}</strong>`, stripP(item.system.notes.player), esc(item.system.requirement.value) || "Ninguno"])))}
+
+<h2 id="pifias">17. Wasteland: pifias y críticos</h2>
+<h3>Pifias (1d10)</h3>
+${table(["Tirada", "Pifia", "Efecto"], wTables.find(t => t.key === "fumble").results.map(r => [r.range[0], `<strong>${esc(r.name)}</strong>`, stripP(r.description)]))}
+<h3>Críticos (1d10 + daño sobrante)</h3>
+<p>La herida aparece en el chat: arrástrala a tu personaje. Sus condiciones se aplican solas, y al curarla debes quitarlas aparte. Se trata con Medicae, según indica su Ítem.</p>
+${critSections}
+
+<h2 id="foundry">18. Guía rápida en Foundry</h2>
 <ol class="steps">
   <li><strong>Crea tu personaje</strong> con el botón Character Creation. Debe haber un máster conectado para que se pueda crear.</li>
   <li><strong>Equipa</strong> armas y armaduras desde la hoja.</li>
@@ -272,6 +361,7 @@ ${table(["Objeto", "Descripción", "Carga", "Caps"], equipment.map(item => [`<st
   <li><strong>Al tirar</strong>, revisa los modificadores de la ventana y activa tus Talentos si aplican.</li>
   <li><strong>Al atacar</strong>, apunta al objetivo con <strong>T</strong> sobre su token y ataca desde la hoja.</li>
   <li><strong>Usa un consumible</strong>, como el Stimpak, desde tu hoja.</li>
+  <li><strong>Compra Perks</strong> arrastrándolos desde el compendio de Wasteland a tu personaje.</li>
 </ol>
 <p class="small note">${VERSION} · Generado a partir de los datos de los módulos.</p>
 `;
@@ -290,6 +380,8 @@ h1, h2, h3 { font-family: Bahnschrift, "Segoe UI", Arial, sans-serif; line-heigh
 h1 { font-size: 46pt; margin: 4mm 0; color: var(--accent); }
 h2 { font-size: 19pt; color: var(--accent); margin: 0 0 3mm; padding-bottom: 1.5mm; border-bottom: 2px solid var(--accent); break-before: page; break-after: avoid; }
 h3 { font-size: 12.5pt; margin: 4mm 0 1.5mm; color: var(--warm); break-after: avoid; }
+h4 { font-size: 10pt; margin: 3mm 0 1mm; break-after: avoid; }
+table.compact-text { font-size: 8.6pt; }
 p { margin: 0 0 2.5mm; }
 a { color: inherit; text-decoration: none; }
 .cover .kicker { margin-top: 20mm; color: var(--warm); font-family: Bahnschrift, Arial, sans-serif; font-size: 12pt; letter-spacing: .04em; }
